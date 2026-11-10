@@ -30,6 +30,9 @@ class GuardTests(unittest.TestCase):
   r=result(27);self.assertEqual(r['verdict'],'no_error');self.assertIsNone(r['edit']);self.assertEqual(apply(qs[r['questionId']],r),qs[r['questionId']])
  def test_atomic_type_migration(self):
   r=result(21);q=apply(qs[r['questionId']],r);self.assertEqual(q['questionType'],'scq');self.assertEqual(q['scq']['answer'],'B');self.assertNotIn('mcq',q)
+ def test_unknown_question_type_rejected(self):
+  r=result(21);r['edit'][0]['replace']='invented_type'
+  with self.assertRaises(ValueError):validate(qs[r['questionId']],r)
  def test_mcq_normalized(self):
   r=result(20);q=apply(qs[r['questionId']],r);self.assertEqual(q['mcq']['answer'],['A','B','D'])
  def test_student_wrong_but_key_broken(self):self.assertEqual(result(4)['edit']['replace'],'D')

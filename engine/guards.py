@@ -33,6 +33,7 @@ def validate(q, result, automatic=False):
         if old==p.get('replace'): raise ValueError('Empty change')
         if f in ('answer','questionType'):
             if old!=p.get('find'): raise ValueError('Stale record')
+            if f=='questionType' and p.get('replace') not in ('scq','mcq','integerQuestion'): raise ValueError('Unknown question type')
         else:
             if not isinstance(p.get('find'),str) or not p['find'] or old.count(p['find'])!=1: raise ValueError('Patch must match exactly once')
             if not isinstance(p.get('replace'),str): raise ValueError('Text replacement required')
