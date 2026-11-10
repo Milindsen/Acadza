@@ -90,3 +90,8 @@ Combining search R004 with the Zoology filter produced zero matches. The first l
 ## Walkthrough production
 
 The three-minute walkthrough is edited from actual browser screen captures with burned-in captions, without synthesized or applicant voice-over. It shows the public precomputed sandbox and the local SQLite audit service. The separate narration script is a suggested personal re-recording, not an assertion that the applicant spoke the captions.
+
+
+## Narration revision
+
+The user requested voice-over and authorized synthetic narration: “you can put your own voice”. The revised walkthrough uses Microsoft Zira synthetic speech, with each segment synchronized to its visual chapter. This is AI narration, not the applicant’s recorded voice. The video remains exactly three minutes. The narration text is included in NARRATION.json.

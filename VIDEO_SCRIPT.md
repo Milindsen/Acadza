@@ -1,6 +1,6 @@
 # Three-minute screen recording guide
 
-Use the live console in a 1440×900 browser window. Record your own voice so the walkthrough reflects your understanding. A three-minute silent captioned walkthrough has been captured from real browser interactions and published at https://acadza-question-care-milind.magnetichymn1.chatgpt.site/walkthrough.html. It includes the public evaluation demo and the local SQLite backend. This script is available if you want to replace it with your own narrated recording.
+Use the live console in a 1440×900 browser window. Record your own voice so the walkthrough reflects your understanding. A three-minute captioned walkthrough with synthetic narration has been captured from real browser interactions and published at https://acadza-question-care-milind.magnetichymn1.chatgpt.site/walkthrough.html. It includes the public evaluation demo and the local SQLite backend. This script is available if you want to replace it with your own narrated recording.
 
 **0:00–0:25 · Start on the queue**
 
