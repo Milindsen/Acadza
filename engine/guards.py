@@ -8,9 +8,15 @@ def patches(result):
     e = result.get('edit')
     return e if isinstance(e,list) else [e] if e else []
 
+def protected_tokens(value):
+    """Spelling changes cannot silently change numeric or MathML content."""
+    maths=re.findall(r'<math\b[\s\S]*?</math>|<img\b[^>]*>',value,re.I)
+    plain=re.sub(r'<[^>]*>','',value)
+    return maths,re.findall(r'\d+(?:\.\d+)?|[=+*/^<>±−×÷√πμρεϕθ]',plain)
+
 def validate(q, result, automatic=False):
     if result.get('verdict') not in TAXONOMY['verdicts']: raise ValueError('Unknown verdict')
-    if not isinstance(result.get('confidence'),(float,int)) or not 0 <= result['confidence'] <= 1: raise ValueError('Invalid confidence')
+    if isinstance(result.get('confidence'),bool) or not isinstance(result.get('confidence'),(float,int)) or not 0 <= result['confidence'] <= 1: raise ValueError('Invalid confidence')
     if result.get('route') not in ('auto_apply','faculty_review','no_change'): raise ValueError('Unknown route')
     repair = result.get('repair')
     if result['verdict'] != 'defect':
@@ -21,7 +27,7 @@ def validate(q, result, automatic=False):
     if not rule['auto'] and (patches(result) or result['route']!='faculty_review'): raise ValueError('Faculty authoring required')
     if result['route']=='auto_apply' and not patches(result): raise ValueError('No patch to apply')
     if automatic and (not rule['auto'] or result['route']!='auto_apply' or result['confidence'] < .97): raise ValueError('Automatic threshold not met')
-    if automatic and repair=='answer_key' and len(result.get('checks',[])) < 2: raise ValueError('Two checks required')
+    if automatic and repair=='answer_key' and len(set(x.strip() for x in result.get('checks',[]) if isinstance(x,str) and len(x.strip())>=10)) < 2: raise ValueError('Two distinct substantive checks required')
     data=q[q['questionType']]
     seen=set()
     for p in patches(result):
@@ -37,10 +43,12 @@ def validate(q, result, automatic=False):
         else:
             if not isinstance(p.get('find'),str) or not p['find'] or old.count(p['find'])!=1: raise ValueError('Patch must match exactly once')
             if not isinstance(p.get('replace'),str): raise ValueError('Text replacement required')
+            if repair=='spelling' and protected_tokens(p['find'])!=protected_tokens(p['replace']): raise ValueError('Spelling repair cannot change mathematics')
             if repair=='answer_form' and p['find'] not in p['replace']: raise ValueError('Answer form must be additive')
             if repair=='option_repair':
                 pos=old.index(p['find']); start=re.search(r'\(A\)',old)
                 if not start or pos < start.start(): raise ValueError('Option repair cannot change stem')
+                if re.findall(r'\([ABCD]\)',p['find'])!=re.findall(r'\([ABCD]\)',p['replace']): raise ValueError('Option labels must be preserved')
             if re.search(r'<\s*(script|iframe|object)|\bon\w+\s*=|javascript:',p['replace'],re.I): raise ValueError('Unsafe markup')
     if patches(result):
         candidate=apply(q,result,check=False)

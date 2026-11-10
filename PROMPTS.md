@@ -95,3 +95,8 @@ The three-minute walkthrough is edited from actual browser screen captures with 
 ## Narration revision
 
 The user requested voice-over and authorized synthetic narration: “you can put your own voice”. The revised walkthrough uses Microsoft Zira synthetic speech, with each segment synchronized to its visual chapter. This is AI narration, not the applicant’s recorded voice. The video remains exactly three minutes. The narration text is included in NARRATION.json.
+
+
+## Final verification and hosting revision
+
+The public frontend moved to GitHub Pages at the user’s request. The existing cloud Worker now provides durable D1 storage, an isolated workspace capability and an exact-origin CORS allowlist. Spelling guards reject mathematical changes, option labels are preserved, repeated evidence cannot count twice, and live solver uncertainty or key disagreement removes automatic eligibility. Verification is 25 Python and 11 JavaScript tests plus a real cloud approval retained after reload. The live model path remains unrun without a provider key. These tests do not establish hidden-label accuracy.

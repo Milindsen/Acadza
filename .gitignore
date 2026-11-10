@@ -7,3 +7,6 @@ work/
 *.sqlite3*
 .sites-local/
 node_modules/
+
+dist/server/
+dist/.openai/

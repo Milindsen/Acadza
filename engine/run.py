@@ -30,7 +30,11 @@ def triage(q,reports):
   if verification.get('approved') is True:proposal['checks'].append(verification['evidence'])
   else:proposal['route']='faculty_review';proposal['verifier_objection']=verification.get('evidence')
   # Never allow low-confidence or incomplete evidence through the auto gate.
-  if proposal.get('confidence',0)<.97 or len(proposal['checks'])<2:proposal['route']='faculty_review'
+  if proposal.get('confidence',0)<.97 or len(proposal['checks'])<2 or solve.get('answerable') is not True or solve.get('assumptions'):proposal['route']='faculty_review'
+  if proposal.get('repair')=='answer_key':
+   edits=proposal['edit'] if isinstance(proposal['edit'],list) else [proposal['edit']]
+   answer_edit=next((e for e in edits if e.get('field')=='answer'),None)
+   if answer_edit and answer_edit['replace']!=solve.get('answer'):proposal['route']='faculty_review'
  validate(q,proposal,automatic=proposal['route']=='auto_apply')
  return [{**proposal,'reportId':r['reportId']} for r in reports]
 def main():

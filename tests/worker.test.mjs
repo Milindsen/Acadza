@@ -1,0 +1,35 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync,readdirSync} from 'node:fs';
+import {DatabaseSync} from 'node:sqlite';
+import {validate,applyPatch} from '../worker/guards.mjs';
+import {createApp} from '../worker/app.mjs';
+const read=p=>JSON.parse(readFileSync(new URL('../'+p,import.meta.url),'utf8'));
+const dataset={questions:read('data/questions.json'),reports:read('data/reports.json'),results:read('results.json')},taxonomy=read('data/taxonomy.json');
+const result=n=>structuredClone(dataset.results.find(x=>x.reportId===`R${String(n).padStart(3,'0')}`));
+const question=r=>structuredClone(dataset.questions.find(q=>q._id===r.questionId));
+class D1 {
+ constructor(){this.sql=new DatabaseSync(':memory:');for(const f of readdirSync(new URL('../drizzle/',import.meta.url)).filter(x=>x.endsWith('.sql')))this.sql.exec(readFileSync(new URL('../drizzle/'+f,import.meta.url),'utf8'));}
+ prepare(sql){const db=this.sql;return {sql,args:[],bind(...args){return {...this,args,first:async()=>db.prepare(sql).get(...args)||null}},first:async()=>db.prepare(sql).get()||null};}
+ async batch(statements){this.sql.exec('BEGIN');try{const out=statements.map(s=>{const st=this.sql.prepare(s.sql);if(/^SELECT/i.test(s.sql))return {results:st.all(...s.args),meta:{changes:0}};const r=st.run(...s.args);return {results:[],meta:{changes:Number(r.changes)}}});this.sql.exec('COMMIT');return out}catch(e){this.sql.exec('ROLLBACK');throw e}}
+}
+test('JavaScript guards validate every one of the 44 committed records',()=>{assert.equal(dataset.results.length,44);for(const r of dataset.results)validate(question(r),r,taxonomy,r.route==='auto_apply')});
+test('spelling cannot smuggle a numerical change',()=>{const r=result(12);r.edit.replace+=' 2';assert.throws(()=>validate(question(r),r,taxonomy),/mathematics/)});
+test('a type migration rejects unknown types',()=>{const r=result(21);r.edit[0].replace='invented';assert.throws(()=>validate(question(r),r,taxonomy),/type/)});
+test('option repair cannot erase a neighbouring option label',()=>{const r=result(11);r.edit.replace+=' (A)';assert.throws(()=>validate(question(r),r,taxonomy),/labels/)});
+test('duplicated evidence does not count as two checks',()=>{const r=result(1);r.checks=[r.checks[0],r.checks[0]];assert.throws(()=>validate(question(r),r,taxonomy,true),/distinct/)});
+test('multi-field type and key migration stays atomic',()=>{const r=result(21);validate(question(r),r,taxonomy);const q=applyPatch(question(r),r);assert.equal(q.questionType,'scq');assert.equal(q.scq.answer,'B');assert.equal(q.mcq,undefined)});
+test('native database adapter verifies durable isolated sessions and optimistic audit',async()=>{
+ const db=new D1();let app=createApp({dataset,taxonomy});const env={DB:db};
+ const initial=await app.fetch(new Request('https://review.test/api/state'),env);const cookie=initial.headers.get('Set-Cookie').split(';')[0],state=await initial.json();assert.equal(state.storage,'d1');assert.equal(state.questions.length,43);
+ const r=result(1),payload={questionId:r.questionId,version:0,actor:'Faculty test',action:'approve'};
+ const post=(body,auth=state.reviewToken,origin='https://review.test')=>app.fetch(new Request('https://review.test/api/action',{method:'POST',headers:{Cookie:cookie,Authorization:'Bearer '+auth,Origin:origin},body:JSON.stringify(body)}),env);
+ assert.equal((await post(payload,'wrong')).status,401);assert.equal((await post(payload,state.reviewToken,'https://attacker.test')).status,403);
+ assert.equal((await post(payload)).status,200);assert.equal((await post(payload)).status,409);
+ app=createApp({dataset,taxonomy});const saved=await(await app.fetch(new Request('https://review.test/api/state',{headers:{Cookie:cookie}}),env)).json();assert.equal(saved.audit.length,1);assert.equal(saved.audit[0].before.scq.answer,'C');assert.equal(saved.audit[0].after.scq.answer,'A');assert.equal(saved.states[r.questionId].version,1);
+ const isolated=await(await app.fetch(new Request('https://review.test/api/state'),env)).json();assert.equal(isolated.audit.length,0);assert.equal(isolated.questions.find(q=>q._id===r.questionId).scq.answer,'C');
+});
+test('invalid writes leave no record or audit behind',async()=>{const db=new D1(),app=createApp({dataset,taxonomy}),env={DB:db};const response=await app.fetch(new Request('https://review.test/api/state'),env);const cookie=response.headers.get('Set-Cookie').split(';')[0],s=await response.json(),r=result(12);r.edit.replace+=' 2';const res=await app.fetch(new Request('https://review.test/api/action',{method:'POST',headers:{Cookie:cookie,Authorization:'Bearer '+s.reviewToken},body:JSON.stringify({questionId:r.questionId,version:0,actor:'Faculty',action:'edit',note:'Attempted invalid edit',edit:r.edit})}),env);assert.equal(res.status,400);assert.equal(db.sql.prepare('SELECT count(*) AS n FROM review_audit').get().n,0);assert.equal(db.sql.prepare('SELECT count(*) AS n FROM review_records').get().n,0)});
+test('missing distractors cannot be approved',async()=>{const db=new D1(),app=createApp({dataset,taxonomy}),env={DB:db};const response=await app.fetch(new Request('https://review.test/api/state'),env);const cookie=response.headers.get('Set-Cookie').split(';')[0],s=await response.json(),r=result(9);const res=await app.fetch(new Request('https://review.test/api/action',{method:'POST',headers:{Cookie:cookie,Authorization:'Bearer '+s.reviewToken},body:JSON.stringify({questionId:r.questionId,version:0,actor:'Faculty',action:'approve'})}),env);assert.equal(res.status,400)});
+test('video byte ranges and HEAD support browser playback',async()=>{const app=createApp({dataset,taxonomy,assets:{'/walkthrough.mp4':{type:'video/mp4',base64:true,body:btoa('0123456789')}}});const part=await app.fetch(new Request('https://review.test/walkthrough.mp4',{headers:{Range:'bytes=2-5'}}),{});assert.equal(part.status,206);assert.equal(await part.text(),'2345');const head=await app.fetch(new Request('https://review.test/walkthrough.mp4',{method:'HEAD'}),{});assert.equal(head.headers.get('Content-Length'),'10');assert.equal(await head.text(),'');const bad=await app.fetch(new Request('https://review.test/walkthrough.mp4',{headers:{Range:'bytes=22-'}}),{});assert.equal(bad.status,416)});
+test('GitHub Pages is allowed and other origins are denied',async()=>{const app=createApp({dataset,taxonomy}),env={DB:new D1()},id=crypto.randomUUID();const allowed=await app.fetch(new Request('https://review.test/api/state',{headers:{Origin:'https://milindsen.github.io',Authorization:'Bearer '+id}}),env);assert.equal(allowed.headers.get('Access-Control-Allow-Origin'),'https://milindsen.github.io');assert.equal((await allowed.json()).reviewToken,id);const pre=await app.fetch(new Request('https://review.test/api/action',{method:'OPTIONS',headers:{Origin:'https://milindsen.github.io'}}),env);assert.equal(pre.status,204);const denied=await app.fetch(new Request('https://review.test/api/action',{method:'OPTIONS',headers:{Origin:'https://attacker.test'}}),env);assert.equal(denied.status,403)});
