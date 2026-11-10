@@ -167,7 +167,7 @@
     "route": "faculty_review",
     "confidence": 0.99,
     "evidence": "Only options A–C exist in stored HTML; D is not a phone rendering problem. vCM=140/14=10 m/s (C), but there is no evidence for the missing distractor. Faculty must author D.",
-    "student_reply": "You’re right: option D is missing from the saved question. We’ve sent it to faculty to restore it; the centre-of-mass calculation gives 10 m/s.",
+    "student_reply": "You’re right: option D is missing from the saved question. It needs faculty review to restore the missing option; the centre-of-mass calculation gives 10 m/s.",
     "checks": [],
     "provenance": "assistant-reviewed baseline; no API call",
     "model_confidence_note": "Heuristic judgment, not calibrated probability"
@@ -181,7 +181,7 @@
     "route": "faculty_review",
     "confidence": 0.99,
     "evidence": "Only options A–C exist in stored HTML; D is not a phone rendering problem. vCM=140/14=10 m/s (C), but there is no evidence for the missing distractor. Faculty must author D.",
-    "student_reply": "You’re right: option D is missing from the saved question. We’ve sent it to faculty to restore it; the centre-of-mass calculation gives 10 m/s.",
+    "student_reply": "You’re right: option D is missing from the saved question. It needs faculty review to restore the missing option; the centre-of-mass calculation gives 10 m/s.",
     "checks": [],
     "provenance": "assistant-reviewed baseline; no API call",
     "model_confidence_note": "Heuristic judgment, not calibrated probability"

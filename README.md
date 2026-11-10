@@ -4,6 +4,10 @@ Public dataset note: student identifiers have been removed with the applicant’
 
 A safe report-to-fix workflow and a faculty console built against all 43 supplied production-format questions and 44 reports.
 
+**Live evaluation console:** https://acadza-question-care-milind.magnetichymn1.chatgpt.site
+
+**3-minute captioned walkthrough:** https://acadza-question-care-milind.magnetichymn1.chatgpt.site/walkthrough.html
+
 **Repository:** https://github.com/Milindsen/Acadza
 
 ## Run locally (Python 3.10+, no packages)

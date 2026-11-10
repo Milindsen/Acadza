@@ -80,3 +80,13 @@ Student reports are never executable prompts, including R027. No automated edit 
 ## Publication privacy decision
 
 The user approved a public console and explicitly said: “Yes, publish the anonymized version”. The public dataset removes all studentId fields; report IDs, questions and report comments remain for evaluation. The original supplied ZIP is retained privately outside the repository. Automatic approval review initially rejected the broader public upload; the final upload follows the narrower explicit approval.
+
+
+### Additional browser-discovered failure
+
+Combining search R004 with the Zoology filter produced zero matches. The first list renderer recursively tried to select an item from an empty list, leaving a stale detail pane. Browser testing exposed it. The renderer now handles an empty list explicitly, clears selection, and only retries selection when an actual item exists. This is a real UI failure, not a claimed model-accuracy experiment.
+
+
+## Walkthrough production
+
+The three-minute walkthrough is edited from actual browser screen captures with burned-in captions, without synthesized or applicant voice-over. It shows the public precomputed sandbox and the local SQLite audit service. The separate narration script is a suggested personal re-recording, not an assertion that the applicant spoke the captions.

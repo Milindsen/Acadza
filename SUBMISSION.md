@@ -2,9 +2,9 @@
 
 Repository: https://github.com/Milindsen/Acadza
 
-Live URL: add the verified published URL after deployment. Check it in a signed-out browser if public access is enabled.
+Live URL: https://acadza-question-care-milind.magnetichymn1.chatgpt.site (published publicly with student IDs removed).
 
-Video: record `VIDEO_SCRIPT.md` and paste your real share link.
+Video: https://acadza-question-care-milind.magnetichymn1.chatgpt.site/walkthrough.html — a three-minute captioned screen walkthrough with no voice-over. You can use `VIDEO_SCRIPT.md` to record your own narrated version.
 
 ## Personal answers (review before sending)
 
